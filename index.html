@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<meta
+			content="width=device-width,initial-scale=1"
+			name="viewport"
+		/>
+		<title>aframe-text-plane</title>
+		<style>
+			[v-cloak] {
+				display: none;
+			}
+		</style>
+		<link
+			href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900"
+			rel="stylesheet"
+		/>
+		<link
+			href="https://unpkg.com/@mdi/font@5/css/materialdesignicons.min.css"
+			rel="stylesheet"
+		/>
+		<link
+			href="https://unpkg.com/vuetify@2/dist/vuetify.min.css"
+			rel="stylesheet"
+		/>
+		<link
+			href="https://fonts.googleapis.com/css?family=Arizonia|Berkshire+Swash|Cookie|Great+Vibes|Just+Another+Hand|Leckerli+One|Lobster+Two|Merienda+One|Oleo+Script|Pacifico"
+			rel="stylesheet"
+		>
+		<script src="https://unpkg.com/core-js-bundle@3/minified.js"></script>
+		<script src="https://unpkg.com/aframe@1/dist/aframe.min.js"></script>
+		<script src="https://unpkg.com/aframe-orbit-controls@1/dist/aframe-orbit-controls.min.js"></script>
+		<script src="./index.js"></script>
+		<script src="https://unpkg.com/vue@2/dist/vue.min.js"></script>
+		<script src="https://unpkg.com/vuetify@2/dist/vuetify.min.js"></script>
+		<script src="https://unpkg.com/just-my-luck@3"></script>
+		<script src="https://unpkg.com/chroma-js@2"></script>
+	</head>
+	<body>
+		<v-app
+			id="app"
+			v-cloak
+		>
+			<v-navigation-drawer
+				v-model="drawer"
+				app
+			>
+				<div class="pa-2">
+					<v-textarea
+						v-model="text"
+						:rows="5"
+						filled
+						hide-details
+						label="text"
+					></v-textarea>
+				</div>
+				<div class="pa-2">
+					<v-select
+						v-model="fontFamily"
+						:items="fontFamilyValues"
+						filled
+						hide-details
+						label="font family"
+					>
+						<template v-slot:item="{item: fontFamily}">
+							<span
+								:style="{fontFamily}"
+							>{{ fontFamily }}</span>
+						</template>
+					</v-select>
+				</div>
+				<div class="pa-2">
+					<v-index-slider
+						v-model="fontSizeIndex"
+						:items="fontSizeValues"
+						label="font size"
+					>
+						<template
+							v-slot:value
+						>{{ fontSizeDisplayString }}</template>
+					</v-index-slider>
+				</div>
+				<div class="pa-2">
+					<v-color-input
+						v-model="color"
+						label="color"
+					></v-color-input>
+				</div>
+				<div class="pa-2">
+					<v-color-input
+						v-model="strokeColor"
+						label="stroke color"
+					></v-color-input>
+				</div>
+				<div class="pa-2">
+					<v-index-slider
+						v-model="strokeWidthIndex"
+						:items="strokeWidthValues"
+						label="stroke width"
+					>
+						<template
+							v-slot:value
+						>{{ strokeWidthDisplayString }}</template>
+					</v-index-slider>
+				</div>
+				<div class="pa-2">
+					<div
+						class="text--secondary"
+					>alignment</div>
+					<v-btn-toggle v-model="alignmentIndex" dense>
+						<v-btn :value="0">
+							<v-icon>mdi-format-align-left</v-icon>
+						</v-btn>
+						<v-btn :value="1">
+							<v-icon>mdi-format-align-center</v-icon>
+						</v-btn>
+						<v-btn :value="2">
+							<v-icon>mdi-format-align-right</v-icon>
+						</v-btn>
+					</v-btn-toggle>
+				</div>
+				<div class="pa-2">
+					<v-index-slider
+						v-model="lineGapIndex"
+						:items="lineGapValues"
+						label="line gap"
+					>
+						<template
+							v-slot:value
+						>{{ lineGapDisplayString }}</template>
+					</v-index-slider>
+				</div>
+				<div class="pa-2">
+					<v-index-slider
+						v-model="paddingIndex"
+						:items="paddingValues"
+						label="padding"
+					>
+						<template
+							v-slot:value
+						>{{ paddingDisplayString }}</template>
+					</v-index-slider>
+				</div>
+				<div class="pa-2">
+					<v-color-input
+						v-model="backgroundColor"
+						label="background color"
+					></v-color-input>
+				</div>
+			</v-navigation-drawer>
+			<v-app-bar
+				app
+				color="primary"
+				dark
+			>
+				<v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
+				<v-toolbar-title>aframe-text-plane</v-toolbar-title>
+				<v-spacer></v-spacer>
+				<v-btn
+					href="https://github.com/SeregPie/aframe-text-plane"
+					icon
+					target="_blank"
+				>
+					<v-icon>mdi-github</v-icon>
+				</v-btn>
+			</v-app-bar>
+			<v-main>
+				<my-scene
+					v-bind="{
+						alignment,
+						backgroundColor,
+						color,
+						fontFamily,
+						fontSize,
+						lineGap,
+						padding,
+						strokeColor,
+						strokeWidth,
+						text,
+					}"
+				></my-scene>
+			</v-main>
+		</v-app>
+		<template id="VColorInput">
+			<div style="display: flex;">
+				<v-menu
+					v-model="menu"
+					ref="menu"
+					:close-on-content-click="false"
+					:return-value.sync="value"
+					offset-y
+					transition="scale-transition"
+				>
+					<template v-slot:activator="{attrs, on}">
+						<div
+							style="
+								align-items: center;
+								display: flex;
+							"
+							v-bind="attrs"
+							v-on="on"
+						>
+							<div
+								class="mr-2"
+								style="
+									background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGElEQVQYlWNgYGCQwoKxgqGgcJA5h3yFAAs8BRWVSwooAAAAAElFTkSuQmCC) repeat;
+									border-radius: 50%;
+									height: 32px;
+									overflow: hidden;
+									width: 32px;
+								"
+							>
+								<div
+									:style="{background: color}"
+									style="
+										height: 100%;
+										width: 100%;
+									"
+								></div>
+							</div>
+							<div
+								class="text--secondary"
+							>{{ label }}</div>
+						</div>
+					</template>
+					<v-card>
+						<v-color-picker
+							v-model="value"
+							flat
+							hide-inputs
+						></v-color-picker>
+						<v-card-actions>
+							<v-spacer></v-spacer>
+							<v-btn
+								text
+								@click="menu = false"
+							>Cancel</v-btn>
+							<v-btn
+								color="primary"
+								text
+								@click="$refs.menu.save(value)"
+							>OK</v-btn>
+						</v-card-actions>
+					</v-card>
+				</v-menu>
+			</div>
+		</template>
+		<template id="VCustomSlider">
+			<div>
+				<div
+					style="
+						align-items: center;
+						display: flex;
+						justify-content: space-between;
+					"
+				>
+					<div
+						class="text--secondary"
+					>{{ label }}</div>
+					<v-chip small>
+						<slot
+							name="value"
+						>{{ value }}</slot>
+					</v-chip>
+				</div>
+				<v-slider
+					v-model="value"
+					:max="max"
+					:min="min"
+					hide-details
+					ticks
+				></v-slider>
+			</div>
+		</template>
+		<template id="VIndexSlider">
+			<v-custom-slider
+				v-model="itemIndex"
+				:label="label"
+				:max="items.length - 1"
+				:min="0"
+			>
+				<template v-slot:value>
+					<slot
+						name="value"
+					>{{ itemValue }}</slot>
+				</template>
+			</v-custom-slider>
+		</template>
+		<script src="./demo/script.js"></script>
+	</body>
+</html>
