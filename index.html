@@ -3,15 +3,10 @@
 	<head>
 		<meta charset="utf-8"/>
 		<meta
-			content="width=device-width,initial-scale=1"
+			content="width=device-width, initial-scale=1"
 			name="viewport"
 		/>
 		<title>aframe-text-plane</title>
-		<style>
-			[v-cloak] {
-				display: none;
-			}
-		</style>
 		<link
 			href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900"
 			rel="stylesheet"
@@ -28,25 +23,37 @@
 			href="https://fonts.googleapis.com/css?family=Arizonia|Berkshire+Swash|Cookie|Great+Vibes|Just+Another+Hand|Leckerli+One|Lobster+Two|Merienda+One|Oleo+Script|Pacifico"
 			rel="stylesheet"
 		>
-		<script src="https://unpkg.com/core-js-bundle@3/minified.js"></script>
-		<script src="https://unpkg.com/aframe@1/dist/aframe.min.js"></script>
-		<script src="https://unpkg.com/aframe-orbit-controls@1/dist/aframe-orbit-controls.min.js"></script>
+		<style>
+			[v-cloak] {
+				display: none;
+			}
+		</style>
+		<script src="https://unpkg.com/aframe@1"></script>
+		<script src="https://unpkg.com/aframe-orbit-controls@1"></script>
 		<script src="./index.js"></script>
-		<script src="https://unpkg.com/vue@2/dist/vue.min.js"></script>
+		<script src="https://unpkg.com/vue@2"></script>
 		<script src="https://unpkg.com/vuetify@2/dist/vuetify.min.js"></script>
-		<script src="https://unpkg.com/just-my-luck@3"></script>
+		<script src="https://unpkg.com/vuetify-color-input@1"></script>
+		<script src="https://unpkg.com/chance@1"></script>
 		<script src="https://unpkg.com/chroma-js@2"></script>
 	</head>
 	<body>
 		<v-app
-			id="app"
+			id="App"
 			v-cloak
 		>
 			<v-navigation-drawer
 				v-model="drawer"
+				:width="384"
 				app
 			>
-				<div class="pa-2">
+				<div
+					class="pa-2"
+					style="
+						display: grid;
+						gap: 16px;
+					"
+				>
 					<v-textarea
 						v-model="text"
 						:rows="5"
@@ -54,14 +61,14 @@
 						hide-details
 						label="text"
 					></v-textarea>
-				</div>
-				<div class="pa-2">
 					<v-select
 						v-model="fontFamily"
 						:items="fontFamilyValues"
+						append-outer-icon="mdi-shuffle"
 						filled
 						hide-details
 						label="font family"
+						@click:append-outer="randomizeFontFamily()"
 					>
 						<template v-slot:item="{item: fontFamily}">
 							<span
@@ -69,82 +76,143 @@
 							>{{ fontFamily }}</span>
 						</template>
 					</v-select>
-				</div>
-				<div class="pa-2">
-					<v-index-slider
-						v-model="fontSizeIndex"
-						:items="fontSizeValues"
-						label="font size"
+					<v-sheet
+						class="pa-2"
+						color="grey lighten-3"
+						rounded
 					>
-						<template
-							v-slot:value
-						>{{ fontSizeDisplayString }}</template>
-					</v-index-slider>
-				</div>
-				<div class="pa-2">
+						<div
+							style="
+								align-items: center;
+								display: flex;
+								justify-content: space-between;
+							"
+						>
+							<div
+								class="text--secondary"
+							>font size</div>
+							<v-chip
+								small
+							>{{ fontSizeDisplayString }}</v-chip>
+						</div>
+						<v-slider
+							v-model="fontSizeIndex"
+							:max="fontSizeValues.length - 1"
+							:min="0"
+							hide-details
+							ticks
+						></v-slider>
+					</v-sheet>
 					<v-color-input
 						v-model="color"
+						hide-details
 						label="color"
 					></v-color-input>
-				</div>
-				<div class="pa-2">
 					<v-color-input
 						v-model="strokeColor"
+						hide-details
 						label="stroke color"
 					></v-color-input>
-				</div>
-				<div class="pa-2">
-					<v-index-slider
-						v-model="strokeWidthIndex"
-						:items="strokeWidthValues"
-						label="stroke width"
+					<v-sheet
+						class="pa-2"
+						color="grey lighten-3"
+						rounded
 					>
-						<template
-							v-slot:value
-						>{{ strokeWidthDisplayString }}</template>
-					</v-index-slider>
-				</div>
-				<div class="pa-2">
-					<div
-						class="text--secondary"
-					>alignment</div>
-					<v-btn-toggle v-model="alignmentIndex" dense>
-						<v-btn :value="0">
-							<v-icon>mdi-format-align-left</v-icon>
-						</v-btn>
-						<v-btn :value="1">
-							<v-icon>mdi-format-align-center</v-icon>
-						</v-btn>
-						<v-btn :value="2">
-							<v-icon>mdi-format-align-right</v-icon>
-						</v-btn>
-					</v-btn-toggle>
-				</div>
-				<div class="pa-2">
-					<v-index-slider
-						v-model="lineGapIndex"
-						:items="lineGapValues"
-						label="line gap"
+						<div
+							style="
+								align-items: center;
+								display: flex;
+								justify-content: space-between;
+							"
+						>
+							<div
+								class="text--secondary"
+							>stroke width</div>
+							<v-chip
+								small
+							>{{ strokeWidthDisplayString }}</v-chip>
+						</div>
+						<v-slider
+							v-model="strokeWidthIndex"
+							:max="strokeWidthValues.length - 1"
+							:min="0"
+							hide-details
+							ticks
+						></v-slider>
+					</v-sheet>
+					<div>
+						<div
+							class="text--secondary"
+						>alignment</div>
+						<v-btn-toggle v-model="alignmentIndex" dense>
+							<v-btn :value="0">
+								<v-icon>mdi-format-align-left</v-icon>
+							</v-btn>
+							<v-btn :value="1">
+								<v-icon>mdi-format-align-center</v-icon>
+							</v-btn>
+							<v-btn :value="2">
+								<v-icon>mdi-format-align-right</v-icon>
+							</v-btn>
+						</v-btn-toggle>
+					</div>
+					<v-sheet
+						class="pa-2"
+						color="grey lighten-3"
+						rounded
 					>
-						<template
-							v-slot:value
-						>{{ lineGapDisplayString }}</template>
-					</v-index-slider>
-				</div>
-				<div class="pa-2">
-					<v-index-slider
-						v-model="paddingIndex"
-						:items="paddingValues"
-						label="padding"
+						<div
+							style="
+								align-items: center;
+								display: flex;
+								justify-content: space-between;
+							"
+						>
+							<div
+								class="text--secondary"
+							>line gap</div>
+							<v-chip
+								small
+							>{{ lineGapDisplayString }}</v-chip>
+						</div>
+						<v-slider
+							v-model="lineGapIndex"
+							:max="lineGapValues.length - 1"
+							:min="0"
+							hide-details
+							ticks
+						></v-slider>
+					</v-sheet>
+					<v-sheet
+						class="pa-2"
+						color="grey lighten-3"
+						rounded
 					>
-						<template
-							v-slot:value
-						>{{ paddingDisplayString }}</template>
-					</v-index-slider>
-				</div>
-				<div class="pa-2">
+						<div
+							style="
+								align-items: center;
+								display: flex;
+								justify-content: space-between;
+							"
+						>
+							<div
+								class="text--secondary"
+							>padding</div>
+							<v-chip
+								small
+							>{{ paddingDisplayString }}</v-chip>
+						</div>
+						<v-slider
+							v-model="paddingIndex"
+							:max="paddingValues.length - 1"
+							:min="0"
+							hide-details
+							ticks
+						></v-slider>
+					</v-sheet>
 					<v-color-input
 						v-model="backgroundColor"
+						hide-details
 						label="background color"
 					></v-color-input>
 				</div>
@@ -182,70 +250,6 @@
 				></my-scene>
 			</v-main>
 		</v-app>
-		<template id="VColorInput">
-			<div style="display: flex;">
-				<v-menu
-					v-model="menu"
-					ref="menu"
-					:close-on-content-click="false"
-					:return-value.sync="value"
-					offset-y
-					transition="scale-transition"
-				>
-					<template v-slot:activator="{attrs, on}">
-						<div
-							style="
-								align-items: center;
-								display: flex;
-							"
-							v-bind="attrs"
-							v-on="on"
-						>
-							<div
-								class="mr-2"
-								style="
-									background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGElEQVQYlWNgYGCQwoKxgqGgcJA5h3yFAAs8BRWVSwooAAAAAElFTkSuQmCC) repeat;
-									border-radius: 50%;
-									height: 32px;
-									overflow: hidden;
-									width: 32px;
-								"
-							>
-								<div
-									:style="{background: color}"
-									style="
-										height: 100%;
-										width: 100%;
-									"
-								></div>
-							</div>
-							<div
-								class="text--secondary"
-							>{{ label }}</div>
-						</div>
-					</template>
-					<v-card>
-						<v-color-picker
-							v-model="value"
-							flat
-							hide-inputs
-						></v-color-picker>
-						<v-card-actions>
-							<v-spacer></v-spacer>
-							<v-btn
-								text
-								@click="menu = false"
-							>Cancel</v-btn>
-							<v-btn
-								color="primary"
-								text
-								@click="$refs.menu.save(value)"
-							>OK</v-btn>
-						</v-card-actions>
-					</v-card>
-				</v-menu>
-			</div>
-		</template>
 		<template id="VCustomSlider">
 			<div>
 				<div
